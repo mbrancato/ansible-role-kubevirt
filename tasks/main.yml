@@ -1,0 +1,70 @@
+---
+- include_tasks: "install-{{ ansible_facts.os_family }}.yml"
+
+- name: Install required Python packages
+  pip:
+    name: openshift
+
+- name: Enable nested virtualization
+  lineinfile:
+    line: options kvm_intel nested=1
+    path: /etc/modprobe.d/kvm.conf
+    create: yes
+    state: present
+  when: kubevirt_enable_nested | bool
+  register: kubevirt_intel_nested
+
+- name: Enable nested virtualization
+  lineinfile:
+    line: options kvm_amd nested=1
+    path: /etc/modprobe.d/kvm.conf
+    create: yes
+    state: present
+  when: kubevirt_enable_nested | bool
+  register: kubevirt_amd_nested
+
+- name: Reload kernel modules
+  systemd:
+    name: systemd-modules-load
+    daemon_reload: yes
+    state: restarted
+    enabled: yes
+  when: >-
+    kubevirt_amd_nested
+    or
+    kubevirt_intel_nested
+
+- name: Create temporary directory for KubeVirt
+  tempfile:
+    state: directory
+    suffix: kubevirt
+  register: kubevirt_temp
+
+- name: Download KubeVirt manifests
+  get_url:
+    url: https://github.com/kubevirt/kubevirt/releases/download/v0.24.0/{{ item }}
+    dest: "{{ kubevirt_temp.path }}/{{ item }}"
+  loop:
+  - kubevirt-operator.yaml
+  - kubevirt-cr.yaml
+  run_once: yes
+
+- name: Install KubeVirt operator
+  k8s:
+    kubeconfig: "{{ kubevirt_kubeconfig }}"
+    src: "{{ kubevirt_temp.path }}/kubevirt-operator.yaml"
+    state: present
+    wait: yes
+  run_once: yes
+
+- name: Deploy KubeVirt
+  k8s:
+    kubeconfig: "{{ kubevirt_kubeconfig }}"
+    src: "{{ kubevirt_temp.path }}/kubevirt-cr.yaml"
+    state: present
+    wait: yes
+    wait_condition:
+      type: Available
+      reason: AllComponentsReady
+      status: 'True'
+  run_once: yes

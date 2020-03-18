@@ -1,0 +1,3 @@
+kubevirt_enable_nested: true
+kubevirt_available_timeout: '60s'
+kubevirt_kubeconfig: '~/.kube/config'
