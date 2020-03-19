@@ -67,4 +67,5 @@
       type: Available
       reason: AllComponentsReady
       status: 'True'
+    wait_timeout: "{{ kubevirt_available_timeout }}"
   run_once: yes
