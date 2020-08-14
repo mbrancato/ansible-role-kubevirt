@@ -5,7 +5,7 @@
   pip:
     name: openshift
 
-- name: Enable nested virtualization
+- name: Enable nested virtualization (Intel)
   lineinfile:
     line: options kvm_intel nested=1
     path: /etc/modprobe.d/kvm.conf
@@ -14,7 +14,7 @@
   when: kubevirt_enable_nested | bool
   register: kubevirt_intel_nested
 
-- name: Enable nested virtualization
+- name: Enable nested virtualization (AMD)
   lineinfile:
     line: options kvm_amd nested=1
     path: /etc/modprobe.d/kvm.conf
@@ -30,24 +30,26 @@
     state: restarted
     enabled: yes
   when: >-
-    kubevirt_amd_nested
+    kubevirt_amd_nested.changed
     or
-    kubevirt_intel_nested
+    kubevirt_intel_nested.changed
 
 - name: Create temporary directory for KubeVirt
   tempfile:
     state: directory
     suffix: kubevirt
   register: kubevirt_temp
+  when: inventory_hostname == play_hosts[0]
 
 - name: Download KubeVirt manifests
   get_url:
-    url: https://github.com/kubevirt/kubevirt/releases/download/v0.24.0/{{ item }}
+    url: https://github.com/kubevirt/kubevirt/releases/download/{{ kubevirt_version }}/{{ item }}
     dest: "{{ kubevirt_temp.path }}/{{ item }}"
-  loop:
+  with_items:
   - kubevirt-operator.yaml
   - kubevirt-cr.yaml
   run_once: yes
+  when: inventory_hostname == play_hosts[0]
 
 - name: Install KubeVirt operator
   k8s:
@@ -56,6 +58,7 @@
     state: present
     wait: yes
   run_once: yes
+  when: inventory_hostname == play_hosts[0]
 
 - name: Deploy KubeVirt
   k8s:
@@ -69,3 +72,4 @@
       status: 'True'
     wait_timeout: "{{ kubevirt_available_timeout }}"
   run_once: yes
+  when: inventory_hostname == play_hosts[0]

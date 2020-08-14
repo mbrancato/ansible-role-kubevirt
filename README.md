@@ -25,7 +25,7 @@ inside the role context. For example:
 
 ### `kubevirt_enable_nested`
 
-- Enables nested virtualization is Kubernetes itself is deployed on virtual
+- Enables nested virtualization if Kubernetes itself is deployed on virtual
 machines
 - Default: *true*
 

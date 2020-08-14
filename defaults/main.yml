@@ -1,3 +1,4 @@
 kubevirt_enable_nested: true
-kubevirt_available_timeout: '60'
+kubevirt_available_timeout: '120'
 kubevirt_kubeconfig: '~/.kube/config'
+kubevirt_version: v0.32.0
