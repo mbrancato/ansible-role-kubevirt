@@ -1,8 +1,8 @@
 # KubeVirt
 
-This Ansible role will deploy KubeVirt onto an existing Kubernetes cluster. It
-supports making necessary changes to the cluster nodes, which should be
-configured in the host inventory.
+This Ansible role will prepare nodes for the deployment of KubeVirt onto an
+existing Kubernetes cluster. It supports making necessary changes to the
+cluster nodes, which should be configured in the host inventory.
 
 ## Requirements
 
@@ -28,15 +28,3 @@ inside the role context. For example:
 - Enables nested virtualization if Kubernetes itself is deployed on virtual
 machines
 - Default: *true*
-
-### `kubevirt_available_timeout`
-
-- The amount of time in seconds to wait for KubeVirt to become available when
-deploying the custom resource
-- Default: *60*
-
-### `kubevirt_kubeconfig`
-
-- Location of the Kubernetes config file to use when deploying KubeVirt
-  - Currently, this only supports the target hosts, so the file must be on the remote host
-- Default: *~/.kube/config*
